@@ -121,22 +121,25 @@ class TestAccountService(TestCase):
             json=account.serialize(),
             content_type="test/html"
         )
-        self.assertEqual(response.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_415_UNSUPPORTED_MEDIA_TYPE
+        )
 
     # ADD YOUR TEST CASES HERE ...
     def test_read_an_account(self):
         """It should Read a single Account"""
-        
+
         # Create test account
         account = self._create_accounts(1)[0]
-        
-        # Read account by id     
+
+        # Read account by id
         response = self.client.get(
             f"{BASE_URL}/{account.id}",
             content_type="application/json"
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-                
+
         # Check the data is correct
         data = response.get_json()
         self.assertEqual(data["name"], account.name)
@@ -148,32 +151,35 @@ class TestAccountService(TestCase):
     def test_get_account_not_found(self):
         """It should not Read an Account that is not found"""
         resp = self.client.get(f"{BASE_URL}/0")
-        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(
+            resp.status_code,
+            status.HTTP_404_NOT_FOUND
+        )
 
     def test_update_an_account(self):
         """It should Update an existing Account"""
-        
+
         # Create test account
         test_account = AccountFactory()
-       
+
         response = self.client.post(
             BASE_URL,
             json=test_account.serialize(),
             content_type="application/json"
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        
+
         # update the account
         data = response.get_json()
         data["name"] = "Foo Bar"
-        
+
         response = self.client.put(
             f"{BASE_URL}/{data['id']}",
             json=data,
             content_type="application/json"
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        
+
         # read and validate
         new_account = response.get_json()
         self.assertEqual("Foo Bar", new_account["name"])
@@ -185,7 +191,7 @@ class TestAccountService(TestCase):
 
     def test_update_account_not_found(self):
         """It should not Update an Account that is not found"""
-        
+
         # Create test account
         initial_account = self._create_accounts(1)[0]
         updated_account_data = initial_account.serialize()
@@ -200,7 +206,7 @@ class TestAccountService(TestCase):
 
     def test_delete_account(self):
         """It should Delete an Account"""
-        
+
         # Create test account
         account = self._create_accounts(1)[0]
 
@@ -208,10 +214,33 @@ class TestAccountService(TestCase):
             f"{BASE_URL}/{account.id}",
         )
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-        
+
         # Ensure account was deleted
         response = self.client.get(
             f"{BASE_URL}/{account.id}",
             content_type="application/json"
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_get_account_list(self):
+        """It should Get a list of Accounts"""
+        self._create_accounts(5)
+
+        response = self.client.get(
+            BASE_URL,
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.get_json()
+        self.assertEqual(len(data), 5)
+
+    def test_method_not_allowed(self):
+        """It should not allow an illegal method call"""
+
+        response = self.client.delete(
+            BASE_URL,
+        )
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_405_METHOD_NOT_ALLOWED
+        )
