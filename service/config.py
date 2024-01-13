@@ -3,8 +3,6 @@ Global Configuration for Application
 """
 import os
 
-
-
 # Build DATABASE_URI from environment if not found
 DATABASE_USER = os.getenv("DATABASE_USER", "postgres")
 DATABASE_PASSWORD = os.getenv("DATABASE_PASSWORD", "postgres")
